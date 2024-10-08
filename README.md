@@ -11,7 +11,7 @@
 2. `npm run dev`
 
 ## ✨ Endpoints
-
+- `base: http://localhost:3003`
 - `[GET] /api/books`
 - `[DELETE] /api/books/:id`
 - `[POST] /api/books`

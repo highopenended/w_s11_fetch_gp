@@ -1,45 +1,80 @@
-import React, { useEffect, useState } from 'react'
-import styled from 'styled-components'
+import React, { useEffect, useState } from "react";
+import styled from "styled-components";
 
 const StyledBook = styled.li`
-  text-decoration: ${props => props.$finished ? 'line-through' : 'initial'}
-`
+  text-decoration: ${(props) => (props.$finished ? "line-through" : "initial")};
+`;
 
-const initialForm = { title: '', author: '', finished: false }
+const initialForm = { title: "", author: "", finished: false };
 
 export default function Books() {
-  const [books, setBooks] = useState([])
-  const [bookForm, setBookForm] = useState(initialForm)
+  const [books, setBooks] = useState([]);
+  const [bookForm, setBookForm] = useState(initialForm);
 
   useEffect(() => {
-    fetchBooks()
-  }, [])
+    fetchBooks();
+  }, []);
 
   const fetchBooks = () => {
+    fetch("/api/books")
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error("Network response was not OK");
+        }
+        const contentType = res.headers.get("Content-Type");
+        if (contentType.includes("application/json")) {
+          // parse the response body as JSON
+          // return a new promise
+          return res.json();
+        }
+        /* debugger */
+      })
+      .then((data) => {
+        setBooks(data);
+        /* debugger */
+      })
+      .catch((err) => {
+        console.error("Failed to GET books", err);
+      });
+  };
 
-  }
-
-  const deleteBook = id => {
-
-  }
+  const deleteBook = (id) => {
+    console.log(`Deleting book with ID ${id}`);
+    fetch(`/api/books/${id}`, { method: "DELETE" })
+      .then(() => fetchBooks())
+      .catch((err) => console.error(`Failed to delete ID: ${id}`, err));
+  };
 
   const onSubmit = (event) => {
-    event.preventDefault()
+    event.preventDefault();
+    const url = bookForm.id ? `/api/books/${bookForm.id}` : "/api/books";
 
-  }
+    fetch(url, {
+      method: bookForm.id ? "PUT" : "POST",
+      body: JSON.stringify(bookForm),
+      headers: new Headers({
+        'Content-Type': 'application/json'
+      })
+    })
+    .then(()=>{
+      fetchBooks()
+      setBookForm(initialForm)
+    })
+  };
 
   const onChange = (event) => {
-    const { name, value, type, checked } = event.target
+    const { name, value, type, checked } = event.target;
     setBookForm({
-      ...bookForm, [name]: type === 'checkbox' ? checked : value
-    })
-  }
+      ...bookForm,
+      [name]: type === "checkbox" ? checked : value,
+    });
+  };
 
   return (
     <div>
       <h2>My Books</h2>
       <ul>
-        {books.map(book => (
+        {books.map((book) => (
           <StyledBook key={book.id} $finished={book.finished}>
             {book.title} by {book.author}
             <div>
@@ -71,8 +106,10 @@ export default function Books() {
             onChange={onChange}
           />
         </label>
-        <button type="submit">{bookForm.id ? 'Update Book' : 'Add Book'}</button>
+        <button type="submit">
+          {bookForm.id ? "Update Book" : "Add Book"}
+        </button>
       </form>
     </div>
-  )
+  );
 }
